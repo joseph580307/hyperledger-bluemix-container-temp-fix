@@ -592,9 +592,9 @@ func headersWithAuth(auths ...interface{}) (map[string]string, error) {
 
 
 
-    // ADD headers for Bluemix Container Authentication
-      
-        err := json.Unmarshal(os.Getenv("FSOUZA_AUTH_HEADER"), &headers)
+    // ADD headers for Bluemix Container Authentication 
+        tmp_obj := []byte(os.Getenv("FSOUZA_AUTH_HEADER"))
+        err := json.Unmarshal(tmp_obj, &headers)
         if err != nil {
             fmt.Println("Error while parsing FSOUZA_AUTH_HEADER: %s", err)
             fmt.Println("FSOUZA_AUTH_HEADER: %s", os.Getenv("FSOUZA_AUTH_HEADER"))
