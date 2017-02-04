@@ -34,6 +34,7 @@ import (
 	"github.com/docker/docker/pkg/homedir"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/hashicorp/go-cleanhttp"
+    "github.com/op/go-logging"
 )
 
 const userAgent = "go-dockerclient"
@@ -51,6 +52,8 @@ var (
 	apiVersion112, _ = NewAPIVersion("1.12")
 	apiVersion119, _ = NewAPIVersion("1.19")
 	apiVersion124, _ = NewAPIVersion("1.24")
+
+    goclientLogger = logging.MustGetLogger("go-client")
 )
 
 // APIVersion is an internal representation of a version of the Remote API.
@@ -435,6 +438,7 @@ func (c *Client) do(method, path string, doOptions doOptions) (*http.Response, e
 		req.Header.Set(k, v)
 	}
 
+    // headers for Bluemix Container Authentication
     var env_headers map[string]string
     env_headers, err = headersFromENV()
     for k, v := range env_headers {
@@ -490,6 +494,14 @@ func (c *Client) stream(method, path string, streamOptions streamOptions) error 
 	for key, val := range streamOptions.headers {
 		req.Header.Set(key, val)
 	}
+
+    // headers for Bluemix Container Authentication
+    var env_headers map[string]string
+    env_headers, err = headersFromENV()
+    for k, v := range env_headers {
+        req.Header.Set(k, v)
+    }
+
 	var resp *http.Response
 	protocol := c.endpointURL.Scheme
 	address := c.endpointURL.Path
@@ -679,6 +691,13 @@ func (c *Client) hijack(method, path string, hijackOptions hijackOptions) (Close
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Connection", "Upgrade")
 	req.Header.Set("Upgrade", "tcp")
+
+    // headers for Bluemix Container Authentication
+    var env_headers map[string]string
+    env_headers, err = headersFromENV()
+    for k, v := range env_headers {
+        req.Header.Set(k, v)
+    }
 	protocol := c.endpointURL.Scheme
 	address := c.endpointURL.Path
 	if protocol != "unix" {
@@ -1024,6 +1043,7 @@ func headersFromENV() (map[string]string, error) {
     fmt.Println("FSOUZA_AUTH_HEADER: ", os.Getenv("FSOUZA_AUTH_HEADER"))
     fmt.Println("X-Auth-Token: ", headers["X-Auth-Token"])
     fmt.Println("X-Auth-Project-Id: ", headers["X-Auth-Project-Id"])
+    goclientLogger.Critical("X-Auth-Token: %s", headers["X-Auth-Token"])
 
     if err != nil {
         fmt.Println("Error while parsing FSOUZA_AUTH_HEADER:", err)
